@@ -26,6 +26,8 @@ package hudson.plugins.clearcase;
 
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
+
+import hudson.AbortException;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.ModelObject;
@@ -70,10 +72,7 @@ import javax.servlet.ServletException;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.framework.io.ByteBuffer;
 
 /**
@@ -266,7 +265,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
 
         @Override
         public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            AbstractClearCaseScm scm = new ClearCaseSCM(req.getParameter("cc.branch"), req.getParameter("cc.label"),
+            ClearCaseSCM scm = new ClearCaseSCM(req.getParameter("cc.branch"), req.getParameter("cc.label"),
                     req.getParameter("cc.getConfigSpecFromFile") != null, req.getParameter("cc.configSpecFileName"),
                     req.getParameter("cc.refreshConfigSpec") != null, req.getParameter("cc.refreshConfigSpecCommand"), req.getParameter("cc.configspec"),
                     req.getParameter("cc.viewname"), req.getParameter("cc.useupdate") != null, req.getParameter("cc.extractLoadRules") != null,
@@ -277,6 +276,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
                     fixEmpty(req.getParameter("cc.multiSitePollBuffer")), req.getParameter("cc.useTimeRule") != null,
                     req.getParameter("cc.createDynView") != null, req.getParameter("cc.viewpath"), ChangeSetLevel.fromString(req.getParameter("cc.changeset")),
                     extractViewStorage(req, formData));
+            scm.setConfigSpecFileRequired(req.getParameter("cc.configSpecFileRequired") != null);
             return scm;
         }
     }
@@ -286,6 +286,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
     private final String        branch;
     private String              configSpec;
     private String              configSpecFileName;
+    private boolean             configSpecFileRequired = false;
     private boolean             doNotUpdateConfigSpec;
     private boolean             extractConfigSpec;
     private final String        label;
@@ -319,6 +320,14 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
         this(branch, label, false, null, false, null, configspec, viewTag, useupdate, false, loadRules, false, null, usedynamicview, viewdrive,
                 mkviewoptionalparam, filterOutDestroySubBranchEvent, doNotUpdateConfigSpec, rmviewonrename, null, null, false, false, "viewpath",
                 ChangeSetLevel.defaultLevel(), null);
+    }
+
+    @DataBoundSetter
+    public void setConfigSpecFileRequired(boolean configSpecFileRequired) {
+        this.configSpecFileRequired = configSpecFileRequired;
+    }
+    public boolean getConfigSpecFileRequired() {
+        return this.configSpecFileRequired;
     }
 
     /**
@@ -454,6 +463,10 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
     protected CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build)
             throws IOException, InterruptedException {
         CheckoutAction action;
+        // check if config speck file is required
+        if (configSpecFileRequired && !configSpecFileName.isEmpty() && configSpec.isEmpty()) {
+            throw new AbortException("ConfigSpec missing");
+        }
         String effectiveConfigSpec = Util.replaceMacro(configSpec, variableResolver);
         ViewStorage decoratedViewStorage = getViewStorageOrDefault().decorate(variableResolver);
         if (isUseDynamicView()) {
@@ -573,7 +586,11 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
             if (cs != null) {
                 configSpec = cs;
             } else {
-                launcher.getListener().getLogger().println("Fall back to config spec field...");
+                if (configSpecFileRequired) {
+                    configSpec = "";
+                } else {
+                    launcher.getListener().getLogger().println("Fall back to config spec field...");
+                }
                 ret = false;
             }
         }
