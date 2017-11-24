@@ -24,6 +24,7 @@
 package hudson.plugins.clearcase.ucm;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.plugins.clearcase.ClearTool;
 import hudson.plugins.clearcase.action.CheckoutAction;
 import hudson.plugins.clearcase.action.UcmDynamicCheckoutAction;
@@ -36,7 +37,7 @@ public class FreezeCodeStreamUcmWorkflow extends StreamUcmWorkflow {
 
     @Override
     public CheckoutAction createCheckoutAction(ClearTool cleartool, String stream, String[] viewPaths, String viewPath, ViewStorage decoratedViewStorage,
-            AbstractBuild<?, ?> build) {
+            Run<?, ?> build) {
         if (isUseDynamicView()) {
             return new UcmDynamicCheckoutAction(cleartool, stream, isCreateDynamicView(), decoratedViewStorage, build, true, isRecreateDynamicView());
         }
@@ -44,7 +45,7 @@ public class FreezeCodeStreamUcmWorkflow extends StreamUcmWorkflow {
     }
 
     @Override
-    public UcmHistoryAction createHistoryAction(ClearTool cleartool, Filter filter, String stream, AbstractBuild<?, ?> build, SCMRevisionState oldBaseline,
+    public UcmHistoryAction createHistoryAction(ClearTool cleartool, Filter filter, String stream, Run<?, ?> build, SCMRevisionState oldBaseline,
             SCMRevisionState newBaseline, String extendedViewPath) {
         UcmHistoryAction action = new FreezeCodeUcmHistoryAction(cleartool, isUseDynamicView(), filter, stream, getViewDrive(), build, toUcm(oldBaseline),
                 toUcm(newBaseline), getFacadeService(cleartool));

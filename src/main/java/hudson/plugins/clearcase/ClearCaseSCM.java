@@ -28,10 +28,7 @@ import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.ModelObject;
-import hudson.model.TaskListener;
-import hudson.model.AbstractBuild;
-import hudson.model.Hudson;
+import hudson.model.*;
 import hudson.plugins.clearcase.action.BaseDynamicCheckoutAction;
 import hudson.plugins.clearcase.action.BaseSnapshotCheckoutAction;
 import hudson.plugins.clearcase.action.CheckoutAction;
@@ -346,7 +343,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    public Filter configureFilters(VariableResolver<String> variableResolver, AbstractBuild build, Launcher launcher) throws IOException, InterruptedException {
+    public Filter configureFilters(VariableResolver<String> variableResolver, Run<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         Filter filter = super.configureFilters(variableResolver, build, launcher);
         if (StringUtils.isNotBlank(label)) {
             ArrayList<Filter> filters = new ArrayList<Filter>();
@@ -451,7 +448,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    protected CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build)
+    protected CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build)
             throws IOException, InterruptedException {
         CheckoutAction action;
         String effectiveConfigSpec = Util.replaceMacro(configSpec, variableResolver);
@@ -468,7 +465,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    protected HistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build,
+    protected HistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build,
             SCMRevisionState baseline, boolean useRecurse) throws IOException, InterruptedException {
         ClearTool ct = createClearTool(variableResolver, launcher);
         BaseHistoryAction action = new BaseHistoryAction(ct, isUseDynamicView(), configureFilters(variableResolver, build, launcher.getLauncher()),
@@ -556,7 +553,7 @@ public class ClearCaseSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    protected SCMRevisionState createRevisionState(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener, Date date)
+    protected SCMRevisionState createRevisionState(Run<?, ?> build, Launcher launcher, TaskListener taskListener, Date date)
             throws IOException, InterruptedException {
         ClearCaseSCMRevisionState revisionState = new ClearCaseSCMRevisionState(date);
         VariableResolver<String> variableResolver = new BuildVariableResolver(build);

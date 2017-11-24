@@ -27,17 +27,17 @@ package hudson.plugins.clearcase.util;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.Computer;
-import hudson.model.Node;
+import hudson.model.*;
 import hudson.util.LogTaskListener;
 import hudson.util.VariableResolver;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
 /**
  * A {@link VariableResolver} that resolves certain Build variables.
@@ -59,7 +59,7 @@ public class BuildVariableResolver implements VariableResolver<String> {
 
     private static final Logger           LOGGER = Logger.getLogger(BuildVariableResolver.class.getName());
 
-    private AbstractBuild<?, ?>           build;
+    private Run<?, ?>           build;
 
     private transient Computer            computer;
 
@@ -69,11 +69,10 @@ public class BuildVariableResolver implements VariableResolver<String> {
 
     private transient Map<Object, Object> systemProperties;
 
-    public BuildVariableResolver(final AbstractBuild<?, ?> build) {
+    public BuildVariableResolver(final Run<?, ?> build) {
         this.build = build;
-        Node node = build.getBuiltOn();
-        this.nodeName = node.getNodeName();
-        this.computer = node.toComputer();
+        this.computer = build.getExecutor().getOwner();
+        this.nodeName = this.computer.getNode().getNodeName();
     }
 
     public BuildVariableResolver(final AbstractBuild<?, ?> build, boolean restricted) {
@@ -88,8 +87,8 @@ public class BuildVariableResolver implements VariableResolver<String> {
                 systemProperties = computer.getSystemProperties();
             }
             LogTaskListener ltl = new LogTaskListener(LOGGER, Level.INFO);
-            if ("JOB_NAME".equals(key) && build != null && build.getProject() != null) {
-                return build.getProject().getFullName();
+            if ("JOB_NAME".equals(key) && build != null) {
+                return build.getParent().getFullName();
             }
 
             if ("HOST".equals(key)) {
@@ -108,7 +107,10 @@ public class BuildVariableResolver implements VariableResolver<String> {
                 return (String) systemProperties.get("user.name");
             }
             if ("DASH_WORKSPACE_NUMBER".equals(key)) {
-                FilePath workspace = build.getWorkspace();
+                FilePath workspace = build.getExecutor().getCurrentWorkspace();
+                if (workspace == null && build.getParent() instanceof WorkflowJob) {
+                    workspace = this.computer.getNode().getWorkspaceFor((WorkflowJob) build.getParent());
+                }
                 if (workspace == null) {
                     return "";
                 }
@@ -118,7 +120,19 @@ public class BuildVariableResolver implements VariableResolver<String> {
                 }
                 return "";
             }
-            Map<String, String> buildVariables = build.getBuildVariables();
+
+            // build parameters map
+            Map<String, String> buildVariables = new HashMap<>();
+
+            // check for parametrized build
+            ParametersAction parameters = build.getAction(ParametersAction.class);
+            if (parameters != null) {
+                for (ParameterValue p : parameters.getAllParameters()) {
+                    if (p.getValue() instanceof String) {
+                        buildVariables.put(p.getName(), (String) p.getValue());
+                    }
+                }
+            }
             if (buildVariables.containsKey(key)) {
                 return buildVariables.get(key);
             }

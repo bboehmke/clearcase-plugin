@@ -91,6 +91,10 @@ import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * Abstract class for ClearCase SCM. The class contains the logic around checkout and polling, the deriving classes only have to implement the specific checkout
  * and polling logic.
@@ -314,12 +318,19 @@ public abstract class AbstractClearCaseScm extends SCM {
     }
 
     @Override
-    public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException,
+    public SCMRevisionState calcRevisionsFromBuild(@Nonnull Run<?,?> build,
+                                                   @Nullable FilePath workspace,
+                                                   @Nullable Launcher launcher,
+                                                   @Nonnull TaskListener taskListener) throws IOException, InterruptedException {
+        return createRevisionState(build, launcher, taskListener, getBuildTime(build));
+    }
+
+    public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException,
     InterruptedException {
         return createRevisionState(build, launcher, taskListener, getBuildTime(build));
     }
 
-    public SCMRevisionState calcRevisionsFromPoll(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException,
+    public SCMRevisionState calcRevisionsFromPoll(Run<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException,
     InterruptedException {
         Date referenceDate;
         if (isMultiSiteSupportEnabled()) {
@@ -334,14 +345,21 @@ public abstract class AbstractClearCaseScm extends SCM {
       return getMultiSitePollBuffer() > 0;
     }
 
-    protected SCMRevisionState createRevisionState(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener, Date date)
+    protected SCMRevisionState createRevisionState(Run<?, ?> build, Launcher launcher, TaskListener taskListener, Date date)
         throws IOException, InterruptedException {
       throw new IllegalStateException();
     }
 
     @Override
-    public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile) throws IOException,
-    InterruptedException {
+    public void checkout(@Nonnull Run<?,?> build, @Nonnull Launcher launcher,
+                         @Nonnull FilePath workspace, @Nonnull TaskListener listener,
+                         @CheckForNull File changelogFile, @CheckForNull SCMRevisionState baseline) throws IOException, InterruptedException {
+    //@Override
+    //public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile) throws IOException,
+    //InterruptedException {
+        // ensure workspace directory exist
+        workspace.mkdirs();
+
         boolean returnValue = true;
         ClearToolLauncher clearToolLauncher = createClearToolLauncher(listener, workspace, launcher);
         VariableResolver<String> variableResolver = new BuildVariableResolver(build);
@@ -395,11 +413,9 @@ public abstract class AbstractClearCaseScm extends SCM {
             returnValue = saveChangeLog(build, launcher, listener, changelogFile, clearToolLauncher, variableResolver, saveChangeLogAction,
                     coNormalizedViewName, returnValue, updtFile);
         }
-
-        return returnValue;
     }
 
-    public Filter configureFilters(VariableResolver<String> variableResolver, AbstractBuild build, Launcher launcher) throws IOException, InterruptedException {
+    public Filter configureFilters(VariableResolver<String> variableResolver, Run<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         List<Filter> filters = new ArrayList<Filter>();
         filters.add(new DefaultFilter());
 
@@ -639,7 +655,7 @@ public abstract class AbstractClearCaseScm extends SCM {
      * @throws InterruptedException
      * @throws IOException
      */
-    public String[] getViewPaths(VariableResolver<String> variableResolver, AbstractBuild build, Launcher launcher) throws IOException, InterruptedException {
+    public String[] getViewPaths(VariableResolver<String> variableResolver, Run<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         return getViewPaths(variableResolver, build, launcher, false);
     }
 
@@ -658,7 +674,7 @@ public abstract class AbstractClearCaseScm extends SCM {
      * @throws InterruptedException
      * @throws IOException
      */
-    public String[] getViewPaths(VariableResolver<String> variableResolver, AbstractBuild build, Launcher launcher, boolean forPolling) throws IOException,
+    public String[] getViewPaths(VariableResolver<String> variableResolver, Run<?, ?> build, Launcher launcher, boolean forPolling) throws IOException,
     InterruptedException {
         String loadRules = getLoadRules(variableResolver, forPolling);
         if (StringUtils.isBlank(loadRules)) {
@@ -951,7 +967,7 @@ public abstract class AbstractClearCaseScm extends SCM {
      * @throws InterruptedException
      * @throws IOException
      */
-    protected abstract CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build)
+    protected abstract CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build)
             throws IOException, InterruptedException;
 
     protected ClearTool createClearTool(VariableResolver<String> variableResolver, ClearToolLauncher launcher) {
@@ -978,7 +994,7 @@ public abstract class AbstractClearCaseScm extends SCM {
      * @throws InterruptedException
      * @throws IOException
      */
-    protected abstract HistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build,
+    protected abstract HistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build,
             SCMRevisionState baseline, boolean useRecurse) throws IOException, InterruptedException;
 
     /**
@@ -1093,7 +1109,7 @@ public abstract class AbstractClearCaseScm extends SCM {
         return !checkoutAction.isViewValid(workspace, viewTag);
     }
 
-    private boolean saveChangeLog(AbstractBuild build, Launcher launcher, BuildListener listener, File changelogFile, ClearToolLauncher clearToolLauncher,
+    private boolean saveChangeLog(Run<?, ?> build, Launcher launcher, TaskListener listener, File changelogFile, ClearToolLauncher clearToolLauncher,
             VariableResolver<String> variableResolver, SaveChangeLogAction saveChangeLogAction, String coNormalizedViewName, boolean returnValue,
             FilePath updtFile) throws IOException, InterruptedException {
         List<? extends ChangeLogSet.Entry> changelogEntries;
@@ -1108,7 +1124,7 @@ public abstract class AbstractClearCaseScm extends SCM {
         // Save change log
         if (CollectionUtils.isEmpty(changelogEntries)) {
             // no changes
-            returnValue = createEmptyChangeLog(changelogFile, listener, "changelog");
+            createEmptyChangeLog(changelogFile, listener, "changelog");
         } else {
             saveChangeLogAction.saveChangeLog(changelogFile, changelogEntries);
         }

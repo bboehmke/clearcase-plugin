@@ -27,6 +27,7 @@ package hudson.plugins.clearcase.action;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.plugins.clearcase.ClearCaseDataAction;
 import hudson.plugins.clearcase.ClearTool;
 import hudson.plugins.clearcase.ClearTool.SetcsOption;
@@ -47,14 +48,14 @@ import java.util.TimeZone;
  */
 public class BaseDynamicCheckoutAction extends CheckoutAction {
 
-    private AbstractBuild<?, ?> build;
+    private Run<?, ?> build;
     private String              configSpec;
     private boolean             createView;
     private boolean             updateConfigSpec;
     private boolean             useTimeRule;
 
     public BaseDynamicCheckoutAction(ClearTool cleartool, String configSpec, boolean doNotUpdateConfigSpec, boolean useTimeRule, boolean createView,
-            ViewStorage viewStorage, AbstractBuild<?, ?> build) {
+            ViewStorage viewStorage, Run<?, ?> build) {
         super(cleartool, viewStorage);
         this.configSpec = configSpec;
         this.updateConfigSpec = !doNotUpdateConfigSpec;

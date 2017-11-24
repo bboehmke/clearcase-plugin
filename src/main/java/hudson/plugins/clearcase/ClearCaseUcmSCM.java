@@ -27,6 +27,7 @@ package hudson.plugins.clearcase;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.ModelObject;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.plugins.clearcase.ClearCaseSCM.ClearCaseScmDescriptor;
@@ -161,9 +162,9 @@ public class ClearCaseUcmSCM extends AbstractClearCaseScm {
         return new UcmChangeLogParser();
     }
 
-    public ClearTool createClearTool(AbstractBuild<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
+    public ClearTool createClearTool(Run<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         BuildVariableResolver variableResolver = new BuildVariableResolver(build);
-        ClearToolLauncher clearToolLauncher = createClearToolLauncher(launcher.getListener(), build.getWorkspace(), launcher);
+        ClearToolLauncher clearToolLauncher = createClearToolLauncher(launcher.getListener(), build.getExecutor().getCurrentWorkspace(), launcher);
         return createClearTool(variableResolver, clearToolLauncher);
     }
 
@@ -218,7 +219,7 @@ public class ClearCaseUcmSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    public String[] getViewPaths(VariableResolver<String> variableResolver, AbstractBuild build, Launcher launcher, boolean forPolling) throws IOException,
+    public String[] getViewPaths(VariableResolver<String> variableResolver, Run<?, ?> build, Launcher launcher, boolean forPolling) throws IOException,
     InterruptedException {
         if (!useManualLoadRules) {
             // If the revision state is already available for this build, just use the value
@@ -272,7 +273,7 @@ public class ClearCaseUcmSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    protected CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build)
+    protected CheckoutAction createCheckOutAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build)
             throws IOException, InterruptedException {
         ClearTool clearTool = createClearTool(variableResolver, launcher);
         String stream2 = getStream(variableResolver);
@@ -283,7 +284,7 @@ public class ClearCaseUcmSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    protected UcmHistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build,
+    protected UcmHistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build,
             SCMRevisionState baseline, boolean useRecurse) throws IOException, InterruptedException {
         ClearTool ct = createClearTool(variableResolver, launcher);
         SCMRevisionState oldBaseline = baseline;
@@ -314,7 +315,7 @@ public class ClearCaseUcmSCM extends AbstractClearCaseScm {
     }
 
     @Override
-    protected SCMRevisionState createRevisionState(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener, Date date) throws IOException,
+    protected SCMRevisionState createRevisionState(Run<?, ?> build, Launcher launcher, TaskListener taskListener, Date date) throws IOException,
     InterruptedException {
         ClearTool clearTool = createClearTool(build, launcher);
         VariableResolver<String> variableResolver = new BuildVariableResolver(build);

@@ -54,13 +54,13 @@ public class UcmDynamicCheckoutAction extends CheckoutAction {
     private static final String BUILD_STREAM_PREFIX           = "hudson_stream.";
     private static final String CONFIGURED_STREAM_VIEW_SUFFIX = "_hudson_view";
 
-    private AbstractBuild       build;
+    private Run<?, ?>       build;
     private boolean             createDynView;
     private boolean             freezeCode;
     private boolean             recreateView;
     private String              stream;
 
-    public UcmDynamicCheckoutAction(ClearTool cleartool, String stream, boolean createDynView, ViewStorage viewStorage, AbstractBuild build,
+    public UcmDynamicCheckoutAction(ClearTool cleartool, String stream, boolean createDynView, ViewStorage viewStorage, Run<?, ?> build,
             boolean freezeCode, boolean recreateView) {
         super(cleartool, viewStorage);
         this.stream = stream;
@@ -77,7 +77,7 @@ public class UcmDynamicCheckoutAction extends CheckoutAction {
         if (dataAction != null) {
             // sync the project in order to allow other builds to safely check if there is
             // already a build running on the same stream
-            synchronized (build.getProject()) {
+            synchronized (build.getParent()) {
                 dataAction.setStream(stream);
             }
         }
@@ -99,7 +99,7 @@ public class UcmDynamicCheckoutAction extends CheckoutAction {
 
     public boolean checkoutCodeFreeze(String viewName) throws IOException, InterruptedException {
         // validate no other build is running on the same stream
-        synchronized (build.getProject()) {
+        synchronized (build.getParent()) {
             ClearCaseDataAction clearcaseDataAction = null;
             Run previousBuild = build.getPreviousBuild();
             while (previousBuild != null) {
@@ -175,12 +175,12 @@ public class UcmDynamicCheckoutAction extends CheckoutAction {
      * @return unique build stream name
      */
     private String getBuildStream() {
-        String jobName = build.getProject().getName().replace(" ", "");
+        String jobName = build.getParent().getName().replace(" ", "");
         return BUILD_STREAM_PREFIX + jobName + "." + stream;
     }
 
     private String getConfiguredStreamViewName() {
-        return getConfiguredStreamViewName(build.getProject().getName(), stream);
+        return getConfiguredStreamViewName(build.getParent().getName(), stream);
     }
 
     private void prepareBuildStreamAndViews(String viewTag, String stream) throws IOException, InterruptedException {

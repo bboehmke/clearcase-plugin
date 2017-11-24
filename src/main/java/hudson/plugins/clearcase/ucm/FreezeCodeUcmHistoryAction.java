@@ -52,11 +52,11 @@ public class FreezeCodeUcmHistoryAction extends UcmHistoryAction {
     private static final String       BASELINE_COMMENT = "hudson_poll_";
     private static final String       BASELINE_NAME    = "hudson_poll_";
 
-    private final AbstractBuild<?, ?> build;
+    private final Run<?, ?> build;
     private final String              stream;
     private final String              viewDrive;
 
-    public FreezeCodeUcmHistoryAction(ClearTool cleartool, boolean useDynamicView, Filter filter, String stream, String viewDrive, AbstractBuild<?, ?> build,
+    public FreezeCodeUcmHistoryAction(ClearTool cleartool, boolean useDynamicView, Filter filter, String stream, String viewDrive, Run<?, ?> build,
             UcmRevisionState oldBaseline, UcmRevisionState newBaseline, FacadeService facadeService) {
         super(cleartool, useDynamicView, filter, oldBaseline, newBaseline, null, facadeService);
         this.build = build;
@@ -125,12 +125,12 @@ public class FreezeCodeUcmHistoryAction extends UcmHistoryAction {
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         String dateStr = formatter.format(new Date()).toLowerCase();
 
-        cleartool.mkbl((BASELINE_NAME + dateStr), UcmDynamicCheckoutAction.getConfiguredStreamViewName(build.getProject().getName(), getStream()),
+        cleartool.mkbl((BASELINE_NAME + dateStr), UcmDynamicCheckoutAction.getConfiguredStreamViewName(build.getParent().getName(), getStream()),
                 (BASELINE_COMMENT + dateStr), false, false, null, null, null);
 
         // get latest baselines on the configured stream
         List<Baseline> latestBlsOnConfgiuredStream = UcmCommon.getLatestBlsWithCompOnStream(cleartool, getStream(),
-                UcmDynamicCheckoutAction.getConfiguredStreamViewName(build.getProject().getName(), getStream()));
+                UcmDynamicCheckoutAction.getConfiguredStreamViewName(build.getParent().getName(), getStream()));
 
         // find the previous build running on the same stream
         Run<?, ?> previousBuild = build.getPreviousBuild();
@@ -186,7 +186,7 @@ public class FreezeCodeUcmHistoryAction extends UcmHistoryAction {
 
             // check if baselines changed
             if (previousBl != null && !previousBl.equals(blDesc.getBaselineName())) {
-                String viewName = UcmDynamicCheckoutAction.getConfiguredStreamViewName(build.getProject().getName(), getStream());
+                String viewName = UcmDynamicCheckoutAction.getConfiguredStreamViewName(build.getParent().getName(), getStream());
 
                 // run diffbl
                 List<String> changedVersionListPerBl = UcmCommon.getDiffBlVersions(cleartool, viewDrive + "/" + viewName, previousBl, blDesc.getBaselineName());

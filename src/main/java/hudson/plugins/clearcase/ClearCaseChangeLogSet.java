@@ -25,6 +25,7 @@
 package hudson.plugins.clearcase;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 
 import java.io.File;
@@ -52,8 +53,8 @@ public class ClearCaseChangeLogSet extends ChangeLogSet<ClearCaseChangeLogEntry>
 
     private List<ClearCaseChangeLogEntry> history = null;
 
-    public ClearCaseChangeLogSet(AbstractBuild<?, ?> build, List<ClearCaseChangeLogEntry> logs) {
-        super(build);
+    public ClearCaseChangeLogSet(Run<?, ?> build, List<ClearCaseChangeLogEntry> logs) {
+        super(build, null);
         for (ClearCaseChangeLogEntry entry : logs) {
             entry.setParent(this);
         }
@@ -119,7 +120,7 @@ public class ClearCaseChangeLogSet extends ChangeLogSet<ClearCaseChangeLogEntry>
      *            the change log file
      * @return the change log set
      */
-    public static ClearCaseChangeLogSet parse(AbstractBuild<?, ?> build, File changeLogFile) throws IOException, SAXException {
+    public static ClearCaseChangeLogSet parse(Run<?, ?> build, File changeLogFile) throws IOException, SAXException {
         FileInputStream fileInputStream = new FileInputStream(changeLogFile);
         ClearCaseChangeLogSet logSet = parse(build, fileInputStream);
         fileInputStream.close();
@@ -184,7 +185,7 @@ public class ClearCaseChangeLogSet extends ChangeLogSet<ClearCaseChangeLogEntry>
      *            input stream containing the change log
      * @return the change log set
      */
-    static ClearCaseChangeLogSet parse(AbstractBuild<?, ?> build, InputStream changeLogStream) throws IOException, SAXException {
+    static ClearCaseChangeLogSet parse(Run<?, ?> build, InputStream changeLogStream) throws IOException, SAXException {
 
         ArrayList<ClearCaseChangeLogEntry> history = new ArrayList<ClearCaseChangeLogEntry>();
 

@@ -24,6 +24,7 @@
 package hudson.plugins.clearcase.ucm;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.plugins.clearcase.ClearTool;
 import hudson.plugins.clearcase.action.CheckoutAction;
 import hudson.plugins.clearcase.history.Filter;
@@ -38,13 +39,13 @@ public class FoundationBaselineUcmWorkflow extends UcmWorkflow {
 
     @Override
     public CheckoutAction createCheckoutAction(ClearTool cleartool, String stream, String[] viewPaths, String viewPath, ViewStorage decoratedViewStorage,
-            AbstractBuild<?, ?> abstractBuild) throws IOException, InterruptedException {
+            Run<?, ?> abstractBuild) throws IOException, InterruptedException {
         return new FoundationBaselineUcmSnapshotCheckoutAction(cleartool, stream, viewPaths, useUpdate, viewPath, decoratedViewStorage,
                 getFacadeService(cleartool));
     }
 
     @Override
-    public UcmHistoryAction createHistoryAction(ClearTool cleartool, Filter filter, String stream, AbstractBuild<?, ?> build, SCMRevisionState oldBaseline,
+    public UcmHistoryAction createHistoryAction(ClearTool cleartool, Filter filter, String stream, Run<?, ?> build, SCMRevisionState oldBaseline,
             SCMRevisionState newBaseline, String extendedViewPath) {
         UcmRevisionState oldUcm = toUcm(oldBaseline);
         UcmRevisionState newUcm = toUcm(newBaseline);

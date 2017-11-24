@@ -25,12 +25,14 @@
 package hudson.plugins.clearcase;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.ChangeLogSet;
 
 import java.io.File;
 import java.io.IOException;
 
+import hudson.scm.RepositoryBrowser;
 import org.xml.sax.SAXException;
 
 /***********************************************************************************************************************
@@ -39,6 +41,11 @@ import org.xml.sax.SAXException;
  * @author Erik Ramfelt
  */
 public class ClearCaseChangeLogParser extends ChangeLogParser {
+    @Override
+    public ChangeLogSet<? extends ChangeLogSet.Entry> parse(Run build, RepositoryBrowser<?> browser, File changelogFile) throws IOException, SAXException {
+        return ClearCaseChangeLogSet.parse(build, changelogFile);
+    }
+
     @Override
     public ChangeLogSet<ClearCaseChangeLogEntry> parse(@SuppressWarnings("unchecked") AbstractBuild build, File changelogFile) throws IOException, SAXException {
         return ClearCaseChangeLogSet.parse(build, changelogFile);

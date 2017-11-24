@@ -23,6 +23,7 @@
  */
 package hudson.plugins.clearcase.ucm;
 
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.plugins.clearcase.ClearTool;
@@ -40,9 +41,9 @@ import java.util.Date;
 
 public abstract class UcmWorkflow {
     public abstract CheckoutAction createCheckoutAction(ClearTool cleartool, String stream, String[] viewPaths, String viewPath,
-            ViewStorage decoratedViewStorage, AbstractBuild<?, ?> abstractBuild) throws IOException, InterruptedException;
+                                                        ViewStorage decoratedViewStorage, Run<?, ?> abstractBuild) throws IOException, InterruptedException;
 
-    public abstract UcmHistoryAction createHistoryAction(ClearTool cleartool, Filter filter, String stream, AbstractBuild<?, ?> build,
+    public abstract UcmHistoryAction createHistoryAction(ClearTool cleartool, Filter filter, String stream, Run<?, ?> build,
             SCMRevisionState oldBaseline, SCMRevisionState newBaseline, String extendedViewPath);
 
     public SCMRevisionState createRevisionState(ClearTool clearTool, TaskListener taskListener, Date date, String streamSelector, String[] loadRules)

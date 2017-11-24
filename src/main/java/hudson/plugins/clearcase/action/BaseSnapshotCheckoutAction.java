@@ -27,6 +27,7 @@ package hudson.plugins.clearcase.action;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.plugins.clearcase.ClearCaseDataAction;
 import hudson.plugins.clearcase.ClearTool;
 import hudson.plugins.clearcase.ClearTool.SetcsOption;
@@ -43,7 +44,7 @@ import org.apache.commons.lang.ArrayUtils;
  */
 public class BaseSnapshotCheckoutAction extends SnapshotCheckoutAction {
 
-    private AbstractBuild    build;
+    private Run<?, ?>    build;
     private final ConfigSpec configSpec;
     private FilePath         updtFile;
 
@@ -53,7 +54,7 @@ public class BaseSnapshotCheckoutAction extends SnapshotCheckoutAction {
     }
 
     public BaseSnapshotCheckoutAction(ClearTool cleartool, ConfigSpec configSpec, String[] loadRules, boolean useUpdate, String viewPath,
-            ViewStorage viewStorage, AbstractBuild build) {
+            ViewStorage viewStorage, Run<?, ?> build) {
         super(cleartool, loadRules, useUpdate, viewPath, viewStorage);
         this.configSpec = configSpec;
         this.build = build;
