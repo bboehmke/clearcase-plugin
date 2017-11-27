@@ -71,8 +71,14 @@ public class BuildVariableResolver implements VariableResolver<String> {
 
     public BuildVariableResolver(final Run<?, ?> build) {
         this.build = build;
-        this.computer = build.getExecutor().getOwner();
-        this.nodeName = this.computer.getNode().getNodeName();
+        if (build instanceof AbstractBuild) {
+            Node node = ((AbstractBuild)build).getBuiltOn();
+            this.nodeName = node.getNodeName();
+            this.computer = node.toComputer();
+        } else {
+            this.computer = build.getExecutor().getOwner();
+            this.nodeName = this.computer.getNode().getNodeName();
+        }
     }
 
     public BuildVariableResolver(final AbstractBuild<?, ?> build, boolean restricted) {
@@ -124,12 +130,16 @@ public class BuildVariableResolver implements VariableResolver<String> {
             // build parameters map
             Map<String, String> buildVariables = new HashMap<>();
 
-            // check for parametrized build
-            ParametersAction parameters = build.getAction(ParametersAction.class);
-            if (parameters != null) {
-                for (ParameterValue p : parameters.getAllParameters()) {
-                    if (p.getValue() instanceof String) {
-                        buildVariables.put(p.getName(), (String) p.getValue());
+            if (build instanceof AbstractBuild) {
+                buildVariables = ((AbstractBuild)build).getBuildVariables();
+            } else {
+                // check for parametrized build
+                ParametersAction parameters = build.getAction(ParametersAction.class);
+                if (parameters != null) {
+                    for (ParameterValue p : parameters.getAllParameters()) {
+                        if (p.getValue() instanceof String) {
+                            buildVariables.put(p.getName(), (String) p.getValue());
+                        }
                     }
                 }
             }
