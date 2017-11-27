@@ -105,14 +105,20 @@ public class AbstractClearCaseScmTest extends AbstractWorkspaceTest {
         }
 
         @Override
+        public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> arg0, Launcher arg1, TaskListener arg2) throws IOException, InterruptedException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
         public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> arg0, Launcher arg1, TaskListener arg2) throws IOException, InterruptedException {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public SCMRevisionState calcRevisionsFromPoll(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException,
-        InterruptedException {
+        public SCMRevisionState calcRevisionsFromPoll(Run<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException,
+                InterruptedException {
             // TODO Auto-generated method stub
             return null;
         }
@@ -164,9 +170,7 @@ public class AbstractClearCaseScmTest extends AbstractWorkspaceTest {
         }
 
         @Override
-        protected HistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, AbstractBuild<?, ?> build,
-                SCMRevisionState baseline, boolean useRecurse) {
-            // TODO Auto-generated method stub
+        protected HistoryAction createHistoryAction(VariableResolver<String> variableResolver, ClearToolLauncher launcher, Run<?, ?> build, SCMRevisionState baseline, boolean useRecurse) throws IOException, InterruptedException {
             return historyAction;
         }
 
@@ -303,9 +307,8 @@ public class AbstractClearCaseScmTest extends AbstractWorkspaceTest {
         when(build.getEnvironment(any(LogTaskListener.class))).thenReturn(new EnvVars());
 
         AbstractClearCaseScm scm = new AbstractClearCaseScmDummy("viewname", "vob", "");
-        boolean hasChanges = scm.checkout(build, launcher, workspace, taskListener, changelogFile);
+        scm.checkout(build, launcher, workspace, taskListener, changelogFile, null);
 
-        assertTrue("The first time should always return true", hasChanges);
         verify(checkOutAction).isViewValid(workspace, "viewname");
         verify(checkOutAction).checkout(launcher, workspace, "viewname");
         verify(historyAction).getChanges(eq(mockedCalendar.getTime()), eq("viewname"), eq("viewname"), eq(new String[] { "branch" }),
@@ -349,8 +352,8 @@ public class AbstractClearCaseScmTest extends AbstractWorkspaceTest {
         when(build.getParent()).thenReturn(project);
 
         AbstractClearCaseScm scm = new AbstractClearCaseScmDummy("viewname", "", false, false, false, "", false, "", "vob", "5", false, "viewpath");
-        boolean hasChanges = scm.checkout(build, launcher, workspace, taskListener, changelogFile);
-        assertTrue("The first time should always return true", hasChanges);
+        scm.checkout(build, launcher, workspace, taskListener, changelogFile, null);
+
         verify(checkOutAction).isViewValid(workspace, "viewname");
         verify(checkOutAction).checkout(launcher, workspace, "viewname");
         verify(historyAction).getChanges(eq(bufferedDate), eq("viewpath"), eq("viewname"), eq(new String[] { "branch" }), eq(new String[] { "vob" }));
@@ -384,8 +387,7 @@ public class AbstractClearCaseScmTest extends AbstractWorkspaceTest {
 
         AbstractClearCaseScm scm = new AbstractClearCaseScmDummy("viewname", "vob", "");
         File changelogFile = new File(parentFile, "changelog.xml");
-        boolean hasChanges = scm.checkout(build, launcher, workspace, taskListener, changelogFile);
-        assertTrue("The first time should always return true", hasChanges);
+        scm.checkout(build, launcher, workspace, taskListener, changelogFile, null);
 
         FilePath changeLogFilePath = new FilePath(changelogFile);
         assertTrue("The change log file is empty", changeLogFilePath.length() > 5);
@@ -420,8 +422,7 @@ public class AbstractClearCaseScmTest extends AbstractWorkspaceTest {
         when(build.getParent()).thenReturn(project);
 
         AbstractClearCaseScm scm = new AbstractClearCaseScmDummy("viewname", "vob", "");
-        boolean hasChanges = scm.checkout(build, launcher, workspace, taskListener, changelogFile);
-        assertTrue("The first time should always return true", hasChanges);
+        scm.checkout(build, launcher, workspace, taskListener, changelogFile, null);
 
         FilePath changeLogFilePath = new FilePath(changelogFile);
         assertTrue("The change log file is empty", changeLogFilePath.length() > 5);
