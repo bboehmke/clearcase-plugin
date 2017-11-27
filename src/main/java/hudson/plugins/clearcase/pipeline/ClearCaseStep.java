@@ -116,6 +116,8 @@ public final class ClearCaseStep extends SCMStep {
                 getChangesetClass(),
                 viewStorage);
 
+        scm.setConfigSpecFileRequired(true);
+
         return scm;
     }
 
