@@ -4,9 +4,7 @@ import hudson.Extension;
 import hudson.plugins.clearcase.AbstractClearCaseScm;
 import hudson.plugins.clearcase.ClearCaseSCM;
 import hudson.plugins.clearcase.viewstorage.DefaultViewStorage;
-import hudson.plugins.clearcase.viewstorage.SpecificViewStorage;
 import hudson.plugins.clearcase.viewstorage.ViewStorage;
-import hudson.plugins.clearcase.viewstorage.ViewStorageFactory;
 import hudson.scm.SCM;
 import org.jenkinsci.plugins.workflow.steps.scm.SCMStep;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -16,7 +14,8 @@ import javax.annotation.Nonnull;
 
 public final class ClearCaseStep extends SCMStep {
 
-    private String configSpec;
+    private String configSpecFile = "";
+    private String configSpec = "";
     private String viewTag = DescriptorImpl.defaultViewTag;
     private String viewPath = DescriptorImpl.defaultViewPath;
     private String changeset = DescriptorImpl.defaultChangeset;
@@ -24,8 +23,17 @@ public final class ClearCaseStep extends SCMStep {
     private boolean useUpdate = DescriptorImpl.defaultUseUpdate;
 
     @DataBoundConstructor
-    public ClearCaseStep(String configSpec) {
-        this.configSpec = configSpec;
+    public ClearCaseStep() {
+
+    }
+
+    public String getConfigSpecFile() {
+        return configSpecFile;
+    }
+
+    @DataBoundSetter
+    public void setConfigSpecFile(String configSpecFile) {
+        this.configSpecFile = configSpecFile;
     }
 
     public String getConfigSpec() {
@@ -97,9 +105,9 @@ public final class ClearCaseStep extends SCMStep {
     @Override
     protected SCM createSCM() {
         ClearCaseSCM scm = new ClearCaseSCM("", "",
-                true, configSpec,
+                !configSpecFile.equals(""), configSpecFile,
                 false, "", // refreshConfigSpec
-                "", viewTag,
+                configSpec, viewTag,
                 useUpdate, // use update
                 true, "", // loadRules
                 false, "", // loadRules polling
@@ -126,12 +134,6 @@ public final class ClearCaseStep extends SCMStep {
         public static final String defaultChangeset = "no";
         public static final ViewStorage defaultViewStorage = new DefaultViewStorage();
         public static final boolean defaultUseUpdate = true;
-
-        public final String viewTag = defaultViewTag;
-        public final String viewPath = defaultViewPath;
-        public final String changeset = defaultChangeset;
-        public final ViewStorage viewStorage = defaultViewStorage;
-        public final boolean useUpdate = defaultUseUpdate;
 
         @Override
         public String getFunctionName() {

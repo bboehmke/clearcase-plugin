@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
-    <f:entry field="configSpec" title="Path to ConfigSpec file" help="/plugin/clearcase/base/cs-file-name.html">
+    <f:entry field="configSpecFile" title="Path to ConfigSpec file" help="/plugin/clearcase/base/cs-file-name.html">
         <f:textbox/>
     </f:entry>
+    <f:entry title="Config spec" help="/plugin/clearcase/configspec.html">
+        <f:textarea name="configSpec"/>
+    </f:entry>
     <f:entry field="viewPath" title="View path" help="/plugin/clearcase/localdir.html">
-        <f:textbox default="${descriptor.viewPath}"/>
+        <f:textbox default="${descriptor.defaultViewPath}"/>
     </f:entry>
     <f:entry field="viewTag" title="View tag" help="/plugin/clearcase/viewtag.html">
-        <f:textbox default="${descriptor.viewTag}"/>
+        <f:textbox default="${descriptor.defaultViewTag}"/>
     </f:entry>
     <f:advanced>
         <f:entry title="Use update">
-            <f:checkbox name="useUpdate" default="${descriptor.useUpdate}" />
+            <f:checkbox name="useUpdate" default="${descriptor.defaultUseUpdate}" />
             If checked, Jenkins will use 'cleartool update' whenever possible,
             making the build faster.
             But this causes the artifacts from the
@@ -20,9 +23,9 @@
         </f:entry>
         <f:entry title="Changeset" field="changeset" help="/plugin/clearcase/base/help-changeset.html">
             <table>
-              <f:radio name="changeset" title="No History" checked="${descriptor.changeset eq 'no'}" value="no"/>
-              <f:radio name="changeset" title="Current branch" checked="${descriptor.changeset eq 'branch'}" value="branch"/>
-              <f:radio name="changeset" title="Use updt file" checked="${descriptor.changeset eq 'updt'}" value="updt"/>
+              <f:radio name="changeset" title="No History" checked="${descriptor.defaultChangeset eq 'no'}" value="no"/>
+              <f:radio name="changeset" title="Current branch" checked="${descriptor.defaultChangeset eq 'branch'}" value="branch"/>
+              <f:radio name="changeset" title="Use updt file" checked="${descriptor.defaultChangeset eq 'updt'}" value="updt"/>
             </table>
         </f:entry>
         <f:entry title="View Storage">
